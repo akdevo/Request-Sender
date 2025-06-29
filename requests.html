@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Request Sender</title>
+  <style>
+      * {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f7f9fc;
+  color: #333;
+  padding: 40px;
+  margin: 0;
+}
+
+h2 {
+  margin-bottom: 20px;
+  font-size: 26px;
+  color: #2c3e50;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+input[type="text"], select {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: border 0.3s;
+  font-size: 14px;
+}
+
+input[type="text"]:focus, select:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+.field {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.field input {
+  flex: 1 1 150px;
+}
+
+.field button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.field button:hover {
+  background-color: #c0392b;
+}
+
+button {
+  background-color: #3498db;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #2980b9;
+  transform: scale(1.03);
+}
+
+#dataFields {
+  background: #ffffff;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  max-width: 500px;
+}
+
+#responseBox {
+  background-color: #ecf0f1;
+  padding: 15px;
+  white-space: pre-wrap;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  max-width: 600px;
+  overflow-x: auto;
+}
+
+  </style>
+</head>
+<body>
+  <h2>Custom HTTP Request Sender</h2>
+
+  <label>Base URL: <input type="text" id="baseUrl" placeholder="https://example.com"></label><br>
+  <label>Endpoint: <input type="text" id="endpoint" placeholder="/api/send"></label><br>
+
+  <label>Request Type:
+    <select id="method">
+      <option>GET</option>
+      <option>POST</option>
+    </select>
+  </label><br><br>
+
+  <div id="dataFields">
+    <h4>Data (Key-Value Pairs)</h4>
+    <div class="field">
+      <input type="text" placeholder="Key" class="key">
+      <input type="text" placeholder="Value" class="value">
+      <button onclick="removeField(this)">Remove</button>
+    </div>
+  </div>
+  <button onclick="addField()">Add Field</button><br><br>
+
+  <button onclick="sendRequest()">Send Request</button><br><br>
+
+  <h4>Response</h4>
+  <pre id="responseBox" style="background: #f4f4f4; padding: 10px;"></pre>
+
+  <script>
+    function addField() {
+      const container = document.getElementById('dataFields');
+      const field = document.createElement('div');
+      field.className = 'field';
+      field.innerHTML = `
+        <input type="text" placeholder="Key" class="key">
+        <input type="text" placeholder="Value" class="value">
+        <button onclick="removeField(this)">Remove</button>
+      `;
+      container.appendChild(field);
+    }
+
+    function removeField(btn) {
+      btn.parentElement.remove();
+    }
+
+    async function sendRequest() {
+  const baseUrl = document.getElementById('baseUrl').value;
+  const endpoint = document.getElementById('endpoint').value;
+  const method = document.getElementById('method').value;
+  const keys = document.querySelectorAll('.key');
+  const values = document.querySelectorAll('.value');
+  const data = {};
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i].value.trim();
+    const value = values[i].value.trim();
+    if (key) data[key] = value;
+  }
+
+  const url = baseUrl + endpoint;
+  const options = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'User-Agent': navigator.userAgent,
+      'Referer': baseUrl,
+      'Origin': baseUrl
+    },
+    credentials: 'include' // send cookies if needed
+  };
+
+  if (method === 'POST') {
+    options.body = JSON.stringify(data);
+  }
+
+  try {
+    const res = await fetch(method === 'GET' ? url + '?' + new URLSearchParams(data) : url, options);
+    const text = await res.text();
+    document.getElementById('responseBox').textContent = text;
+  } catch (err) {
+    document.getElementById('responseBox').textContent = 'Error: ' + err.message;
+  }
+}
+
+  </script>
+</body>
+</html>
